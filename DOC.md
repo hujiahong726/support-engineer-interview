@@ -174,6 +174,22 @@ Preventative Measures:
 - Review database write operations to ensure corresponding cleanup or invalidation logic (where appropriate)
 - Encourage use of centralized session management utilities to maintain consistent behavior
 
+Ticket PERF-402: Logout Issues
+Cause:
+The logout mutation always returned `success: true` regardless of whether the session was actually deleted from the database. It would extract the token, attempt to delete it, but never verify the deletion was successful. If the token didn't exist, was invalid, or the deletion failed, users would still be told they logged out successfully while their session remained active.
+Fix:
+Updated the logout mutation in server/routers/auth.ts to:
+- Verify the session exists in the database before attempting deletion
+- Check that the deletion was successful by querying for the token again
+- Return `success: false` if the session wasn't actually deleted
+- Provide specific error messages (e.g., "Session not found", "Failed to delete session")
+- Always clear the session cookie regardless of database operation result
+Preventative Measures:
+- Verify database operations completed successfully before reporting success
+- Never assume side effects worked; query to confirm state changes
+- Return accurate status codes and messages to frontend
+- Handle edge cases (missing sessions, already-deleted sessions, etc.)
+
 Ticket PERF-403: Session Expiry
 Cause:
 Session validation only checked whether expiresAt > now, meaning sessions remained fully valid right up until the exact expiration timestamp. There was no proactive actions taken for sessions close to expiry, which increased risk of sessions near expiration (e.g., stolen token remains usable until the last second) and could lead to inconsistent user experience when a request happens right at expiry.

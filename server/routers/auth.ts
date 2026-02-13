@@ -133,8 +133,11 @@ export const authRouter = router({
     }),
 
   logout: publicProcedure.mutation(async ({ ctx }) => {
+    let sessionDeleted = false;
+    let message = "No active session";
+
     if (ctx.user) {
-      // Delete session from database
+      // Extract session token from request
       let token: string | undefined;
       if ("cookies" in ctx.req) {
         token = (ctx.req as any).cookies.session;
@@ -145,17 +148,42 @@ export const authRouter = router({
           .find((c: string) => c.startsWith("session="))
           ?.split("=")[1];
       }
+
       if (token) {
-        await db.delete(sessions).where(eq(sessions.token, token));
+        // Verify session exists before deletion
+        const existingSession = await db.select().from(sessions).where(eq(sessions.token, token)).get();
+        
+        if (existingSession) {
+          // Delete the session
+          await db.delete(sessions).where(eq(sessions.token, token));
+          
+          // Verify deletion was successful
+          const deletedSession = await db.select().from(sessions).where(eq(sessions.token, token)).get();
+          
+          if (!deletedSession) {
+            sessionDeleted = true;
+            message = "Logged out successfully";
+          } else {
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "Failed to delete session",
+            });
+          }
+        } else {
+          message = "Session not found in database";
+        }
+      } else {
+        message = "No session token in request";
       }
     }
 
+    // Clear the session cookie
     if ("setHeader" in ctx.res) {
       ctx.res.setHeader("Set-Cookie", `session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0`);
     } else {
       (ctx.res as Headers).set("Set-Cookie", `session=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0`);
     }
 
-    return { success: true, message: ctx.user ? "Logged out successfully" : "No active session" };
+    return { success: sessionDeleted, message };
   }),
 });
