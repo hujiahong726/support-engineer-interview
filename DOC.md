@@ -6,6 +6,8 @@ Added DOB validation on both frontend and backend. The validation makes sure tha
 - DOB is not a future date
 - User is at least 18 years old
 - User's age does not exceed 130 (sanity check)
+Testing:
+Tested on frontend interface with valid and invalid inputs to ensure correct behavior.
 Preventative Measures:
 Add validations for other user input fields to prevent invalid or unsafe inputs.
 
@@ -24,5 +26,18 @@ Testing:
 Added Luhn Algorithm testing in lib/validation/card.test.ts
 Preventative Measures:
 Ensure that other input fields (phone numbers, ) also have correct validation checks.
+
+Ticket VAL-208: Weak Password Requirements
+Cause:
+No validation checks to ensure strong passwords. Only checks the input against three common passwords, which is not adequate.
+Fix:
+Added validation checks:
+- must have upper case letter
+- must have lower case letter
+- must have digit
+- must have special character
+Testing:
+Tested on frontend interface on valid and invalid inputs to ensure correct behavior.
+
 
 
