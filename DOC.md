@@ -153,3 +153,13 @@ Preventative Measures:
 - Have centralized validation rule for card numbers.
 - Use industry standard validation logic for financial info when possible.
 
+Ticket SEC-302: Insecure Random Numbers
+Cause:
+we use Math.random() to mimic generating random numbers. Math.random() is not cryptographically secure and can produce predictable value.
+Fix:
+We use 10-digit numeric nanoid instead. Nanoid uses a cryptographically secure random source, which means it has better unpredictability and it reduces the risk of collisions or malicious enumeration of account numbers.
+Preventative Measures:
+- Adopt cryptographically secure random generators for all sensitive user identifiers
+- Establish guidelines requiring industry-standard libraries for ID generation
+- Perform periodic security reviews to identify and replace unsafe random number usage
+

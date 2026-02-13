@@ -4,12 +4,14 @@ import { protectedProcedure, router } from "../trpc";
 import { db } from "@/lib/db";
 import { accounts, transactions } from "@/lib/db/schema";
 import { eq, and, sql} from "drizzle-orm";
+import { nanoid, customAlphabet } from 'nanoid';
 
-function generateAccountNumber(): string {
-  return Math.floor(Math.random() * 1000000000)
-    .toString()
-    .padStart(10, "0");
-}
+// Standard Nano ID (e.g., "V1StGXR8_Z5jdHi6B-myT")
+const id = nanoid();
+
+// Custom Numeric-only Account Number (e.g., "4920583712")
+const generateAccountNumber = customAlphabet('0123456789', 10);
+const accountNumber = generateAccountNumber();
 
 export const accountRouter = router({
   createAccount: protectedProcedure
