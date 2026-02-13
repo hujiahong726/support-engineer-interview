@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { trpc } from "@/lib/trpc/client";
 import Link from "next/link";
-import { zodResolver } from "@hookform/resolvers/zod/src/index.js";
-import { signupSchema } from "@/lib/validation/schemas/auth.schema";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { normalizeEmail, signupSchema } from "@/lib/validation/schemas/auth.schema";
 
 type SignupFormData = {
   email: string;
@@ -40,6 +40,10 @@ export default function SignupPage() {
   const signupMutation = trpc.auth.signup.useMutation();
 
   const password = watch("password");
+
+  const emailValue = watch("email");
+  const normalizedEmail = emailValue ? normalizeEmail(emailValue) : "";
+  const showNormalizationHint = emailValue && emailValue !== normalizedEmail;
 
   const nextStep = async () => {
     let fieldsToValidate: (keyof SignupFormData)[] = [];
@@ -89,6 +93,11 @@ export default function SignupPage() {
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
                 />
                 {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>}
+                {showNormalizationHint && !errors.email && (
+                  <p className="mt-1 text-sm text-yellow-600">
+                    Email will be saved in lowercase.
+                  </p>
+                )}
               </div>
 
               <div>

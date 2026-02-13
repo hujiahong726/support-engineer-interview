@@ -9,6 +9,9 @@ const yearsAgo = (years: number) => {
   return date;
 };
 
+export const normalizeEmail = (email: string) =>
+  email.trim().toLowerCase();
+
 const emailSchema = z
   .string()
   .min(1, "Email is required")

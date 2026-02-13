@@ -111,3 +111,17 @@ Preventative Measures:
 - Ensure initialization functions set up schema only and do not manage database connections
 - Add shutdown handling and documentation for graceful shutdown
 
+
+
+Priority: High
+
+Ticket VAL-205: Zero Amount Funding
+Cause:
+No validation checks for email formats or domain
+Fix:
+Added validation to ensure email follows standard formatting rules (valid local part, valid domain, and required @ and . structure). Additionally, we alert the user if the domain they entered is one of the common typos we recognize. We also alert the user if their email contains letters in cap because we store them in lower case.
+Preventative Measures:
+- Centralized email validation and normalization logic
+- Apply consistent validation rules across frontend and backend
+- validating user inputs using shared schema
+
