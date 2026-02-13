@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../trpc";
 import { db } from "@/lib/db";
 import { accounts, transactions } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql} from "drizzle-orm";
 
 function generateAccountNumber(): string {
   return Math.floor(Math.random() * 1000000000)
@@ -122,21 +122,20 @@ export const accountRouter = router({
         });
       }
       // Update account balance
-      await db
+      const [updated] = await db
         .update(accounts)
-        .set({
-          balance: account.balance + amount,
-        })
-        .where(eq(accounts.id, input.accountId));
-
-      let finalBalance = account.balance;
-      for (let i = 0; i < 100; i++) {
-        finalBalance = finalBalance + amount / 100;
+        .set({ balance: sql`${accounts.balance} + ${amount}` })
+        .where(eq(accounts.id, input.accountId))
+        .returning({ balance: accounts.balance });
+      if (!updated) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update account balance",
+        });
       }
-
       return {
         transaction: created,
-        newBalance: finalBalance, // This will be slightly off due to float precision
+        newBalance: updated.balance,
       };
     }),
 

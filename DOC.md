@@ -89,3 +89,14 @@ Preventative Measures:
 - Avoid read-after-write operations that rely on orderBy to identify the newly created record
 - Always find transaction queries by accountId
 
+Ticket PERF-406: Balance Calculation
+Cause
+- The balance was computed using a for loop (adding 1/100 of amount to finalBalance repeated 100 times), which introduces floating-point rounding drift over time.
+- The balance update used a stale in-memory value (account.balance + amount) and did not atomically return the stored balance, which can lead to inconsistencies (especially under rapid or concurrent updates).
+Fix:
+- Removed the for loop.
+- Updated the balance using a increment (accounts.balance + amount) on the database side and used .returning() to fetch the updated balance in a single, atomic operation. This ensures the returned newBalance reflects what was actually written to the database.
+Preventative Measures:
+- Avoid manual floating-point accumulation for money.
+- Prefer atomic DB operations.
+
