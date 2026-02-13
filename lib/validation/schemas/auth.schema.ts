@@ -18,6 +18,25 @@ const VALID_STATES = [
   'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
 ];
 
+/**
+ * Normalize phone number by stripping common formatting characters
+ * Accepts: +1-234-567-8900, (123) 456-7890, +1 234 567 8900, 1234567890, etc.
+ */
+export const normalizePhoneNumber = (phone: string): string => {
+  return phone
+    .replace(/[\s\-()]/g, '') // Remove spaces, hyphens, parentheses
+    .trim();
+};
+
+const phoneNumberSchema = z
+  .string()
+  .min(1, "Phone number is required")
+  .transform(normalizePhoneNumber)
+  .refine(
+    (phone) => /^\+?\d{10,15}$/.test(phone),
+    "Phone number must be 10-15 digits (with optional + prefix). Format: +1-234-567-8900 or 1234567890"
+  );
+
 export const normalizeEmail = (email: string) =>
   email.trim().toLowerCase();
 
@@ -107,7 +126,7 @@ export const signupSchema = z.object({
   confirmPassword: z.string().min(1, "Please confirm your password"),
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
-  phoneNumber: z.string().regex(/^\+?\d{10,15}$/, "Invalid phone number"),
+  phoneNumber: phoneNumberSchema,
   dateOfBirth: dateOfBirthSchema,
   ssn: z.string().regex(/^\d{9}$/, "SSN must be 9 digits"),
   address: z.string().min(1, "Address is required"),

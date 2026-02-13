@@ -228,3 +228,17 @@ Tested on frontend interface with valid state codes (CA, NY, TX) and invalid one
 Preventative Measures:
 - Use defined lists for values that must be one of the defined values (state codes, country codes, etc.)
 - Maintain centralized lists for country/region-specific codes in shared schema files
+
+Ticket VAL-204: Phone Number Format
+Cause:
+Phone number validation only checked basic regex pattern (`^\+?\d{10,15}$`) without normalizing common formatting. The system accepted unformatted strings and rejected properly formatted international numbers like "+1-234-567-8900" or "(123) 456-7890".
+Fix:
+Implemented phone number normalization, and validatds 10-15 digits with optional `+` prefix after normalization
+Testing:
+Tested with various phone number formats.
+Preventative Measures:
+- Always normalize user input before validation for flexible fields (phone, SSN formatting variations, etc.)
+- Provide clear examples of acceptable formats in error messages
+- Store normalized version in database for consistency
+- Consider using a library like `libphonenumber-js` for advanced international validation in future
+
