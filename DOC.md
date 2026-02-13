@@ -71,3 +71,12 @@ Preventative Measures:
 - Use DOMPurify sanitization to allow a limited set of safe HTML.
 - Check for other instances of raw HTML rendering.
 
+Ticket PERF-401: Account Creation Error
+Cause:
+The logic for creating accounts returned a fallback account object with a hardcoded $100 balance when failed to create an account.
+Fix:
+The system should throw an error when we fail to create an account. This way, we don't create fallback account object and therefore no fabricated data.
+Preventative Measures:
+- Avoid returning default data (especially for financial operations) when database operations fail.
+- Ensure we report database failures and have proper error handling in place
+
