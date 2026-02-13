@@ -7,12 +7,11 @@ const dbPath = "bank.db";
 const sqlite = new Database(dbPath);
 export const db = drizzle(sqlite, { schema });
 
-const connections: Database.Database[] = [];
+let initialized = false;
 
 export function initDb() {
-  const conn = new Database(dbPath);
-  connections.push(conn);
-
+  if (initialized) return;
+  initialized = true;
   // Create tables if they don't exist
   sqlite.exec(`
     CREATE TABLE IF NOT EXISTS users (

@@ -100,3 +100,14 @@ Preventative Measures:
 - Avoid manual floating-point accumulation for money.
 - Prefer atomic DB operations.
 
+Ticket PERF-408: Resource Leak
+Cause:
+The database initialization logic previously created new SQLite connections in initDb() and stored them in an connections array. These connections were never closed, which could lead to memory growth and resource exhaustion.
+Fix:
+- Modified database initialization to use a single shared SQLite connection instance. The initDb() function now only executes table creation logic using the existing connection instead of creating new connections. 
+- Also, database initialization is only performed once during module import.
+Preventative Measures:
+- Avoid creating new database connections without explicitly closing them
+- Ensure initialization functions set up schema only and do not manage database connections
+- Add shutdown handling and documentation for graceful shutdown
+
