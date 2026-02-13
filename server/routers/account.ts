@@ -3,7 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../trpc";
 import { db } from "@/lib/db";
 import { accounts, transactions } from "@/lib/db/schema";
-import { eq, and, sql} from "drizzle-orm";
+import { eq, and, sql, desc} from "drizzle-orm";
 import { nanoid, customAlphabet } from 'nanoid';
 
 // Standard Nano ID (e.g., "V1StGXR8_Z5jdHi6B-myT")
@@ -145,6 +145,7 @@ export const accountRouter = router({
     .input(
       z.object({
         accountId: z.number(),
+        limit: z.number().min(1).max(100).default(25).optional(),
       })
     )
     .query(async ({ input, ctx }) => {
@@ -163,20 +164,15 @@ export const accountRouter = router({
       }
 
       const accountTransactions = await db
-        .select()
-        .from(transactions)
-        .where(eq(transactions.accountId, input.accountId));
+      .select()
+      .from(transactions)
+      .where(eq(transactions.accountId, input.accountId))
+      .orderBy(desc(transactions.createdAt))
+      .limit(input.limit ?? 25);
 
-      const enrichedTransactions = [];
-      for (const transaction of accountTransactions) {
-        const accountDetails = await db.select().from(accounts).where(eq(accounts.id, transaction.accountId)).get();
-
-        enrichedTransactions.push({
-          ...transaction,
-          accountType: accountDetails?.accountType,
-        });
-      }
-
-      return enrichedTransactions;
+      return accountTransactions.map((t) => ({
+        ...t,
+        accountType: account.accountType, // reuse already-fetched account
+      }));
     }),
 });

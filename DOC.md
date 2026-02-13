@@ -187,3 +187,16 @@ Preventative Measures:
 - Define explicit centralized session lifecycle rules (rotation window, duration, single-session policy).
 - Add tests for edge cases around expiration.
 
+Ticket PERF-407: Performance Degradation
+Cause:
+getTransactions fetched all transactions for an account and then performed an additional database query per transaction (an N+1 query). This led to unnecessary database load and slow response times. The query also didn't have explicit ordering and pagination, which further increased latency (especially when there are many results).
+Fix:
+Refactored getTransactions to be more efficient and predictable:
+- Removed the N+1 enrichment loop by reusing the already-fetched account object for accountType
+- Added ordering by createdAt DESC so newest transactions appear first
+- Added an optional limit parameter (default 25, max 100) to support pagination and reduce payload size
+Preventative Measures:
+Avoid N+1 query patterns; prefer reusing known data or joining in a single query
+- Add pagination defaults for endpoints that can grow quickly and accumulate over time (transaction history)
+- Add tests and benchmarks on performance for endpoints expected to scale with more user activity
+
