@@ -200,3 +200,17 @@ Avoid N+1 query patterns; prefer reusing known data or joining in a single query
 - Add pagination defaults for endpoints that can grow quickly and accumulate over time (transaction history)
 - Add tests and benchmarks on performance for endpoints expected to scale with more user activity
 
+
+
+Priority Medium:
+Ticket UI-101: Dark Mode Text Visibility
+Cause:
+When users enabled dark mode, form input fields had dark background color but retained white text color from the default browser styles.
+Fix:
+Added explicit CSS styling for form elements in globals.css to ensure they remain readable in both light and dark modes.
+Testing:
+Tested by enabling system dark mode and verifying text visibility in signup/login form inputs on the web interface.
+Preventative Measures:
+- Explicitly style interactive form elements to override browser defaults
+- Test UI behavior across both light and dark system themes during development
+
