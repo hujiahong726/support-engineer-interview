@@ -9,6 +9,15 @@ const yearsAgo = (years: number) => {
   return date;
 };
 
+// Valid US state codes
+const VALID_STATES = [
+  'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
+  'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+  'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+  'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+  'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
+];
+
 export const normalizeEmail = (email: string) =>
   email.trim().toLowerCase();
 
@@ -103,7 +112,13 @@ export const signupSchema = z.object({
   ssn: z.string().regex(/^\d{9}$/, "SSN must be 9 digits"),
   address: z.string().min(1, "Address is required"),
   city: z.string().min(1, "City is required"),
-  state: z.string().length(2, "State must be 2 characters").toUpperCase(),
+  state: z.string()
+    .length(2, "State must be 2 characters")
+    .toUpperCase()
+    .refine(
+      (state) => VALID_STATES.includes(state),
+      "Invalid state code. Please enter a valid US state abbreviation"
+    ),
   zipCode: z.string().regex(/^\d{5}$/, "ZIP code must be 5 digits"),
 }).refine(
     (data) => data.password === data.confirmPassword,

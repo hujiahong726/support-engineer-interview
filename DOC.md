@@ -203,6 +203,7 @@ Avoid N+1 query patterns; prefer reusing known data or joining in a single query
 
 
 Priority Medium:
+
 Ticket UI-101: Dark Mode Text Visibility
 Cause:
 When users enabled dark mode, form input fields had dark background color but retained white text color from the default browser styles.
@@ -214,3 +215,16 @@ Preventative Measures:
 - Explicitly style interactive form elements to override browser defaults
 - Test UI behavior across both light and dark system themes during development
 
+Ticket VAL-203: State Code Validation
+Cause:
+The state validation only checked that the input was exactly 2 characters long, including strings that are not valid US state abbreviations.
+Fix:
+Added a list of all 50 valid US state abbreviations in the auth schema. The validation now checks:
+- Exactly 2 characters in length
+- Uppercase format
+- Must be in the VALID_STATES list
+Testing:
+Tested on frontend interface with valid state codes (CA, NY, TX) and invalid ones (XX, AB, 99).
+Preventative Measures:
+- Use defined lists for values that must be one of the defined values (state codes, country codes, etc.)
+- Maintain centralized lists for country/region-specific codes in shared schema files
