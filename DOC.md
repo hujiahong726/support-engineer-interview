@@ -115,7 +115,7 @@ Preventative Measures:
 
 Priority: High
 
-Ticket VAL-205: Zero Amount Funding
+Ticket VAL-201: Email Validation Problems
 Cause:
 No validation checks for email formats or domain
 Fix:
@@ -134,4 +134,13 @@ Preventative Measures:
 - Established a shared validation pattern to reduce duplication between frontend and backend logic.
 - Ensured validation rules are defined and updated in one location.
 - Reduced risk of invalid data reaching database or financial processing workflows
+
+Ticket VAL-207: Routing Number Optional
+Cause:
+No validation check requiring routing number when the fundAccount type is bank.
+Fix:
+Added validation check in the shared schema that forces user to enter routing number if they fund their account using bank.
+Preventative Measures:
+- Ensured consistent validation rule in one place and that acts as a shared reference for both frontend and backend.
+
 
