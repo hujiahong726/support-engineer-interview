@@ -7,6 +7,10 @@ export const fundingSchema = z.object({
     .string()
     .regex(/^\d+\.?\d{0,2}$/, "Invalid amount format")
     .refine(
+      (val) => !/^0\d/.test(val),
+      "Amount cannot start with a leading zero (e.g., enter 50.00 not 050.00)"
+    )
+    .refine(
       (val) => parseFloat(val) >= 0.01,
       "Amount must be at least $0.01"
     )

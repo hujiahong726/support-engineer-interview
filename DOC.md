@@ -242,6 +242,18 @@ Preventative Measures:
 - Store normalized version in database for consistency
 - Consider using a library like `libphonenumber-js` for advanced international validation in future
 
+Ticket VAL-209: Amount Input Issues
+Cause:
+The amount input validation regex (`/^\d+\.?\d{0,2}$/`) did not reject leading zeros. The regex simply accepted any valid decimal format without restricting leading zeros.
+Fix:
+Added a validation rule in lib/validation/schemas/funding.schema.ts that:
+- Uses `.refine((val) => !/^0\d/.test(val), ...)` to reject amounts starting with "0" followed by another digit
+Testing:
+Tested amount inputs with leading zeroes.
+Preventative Measures:
+- Validate at input level to immediately alert users of invalid formats
+- Provide clear, specific error messages explaining what's wrong
+
 Ticket PERF-404: Transaction Sorting
 Cause:
 No transaction sorting when fetched from the database
