@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { users, sessions } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { yearsAgo } from "@/lib/validation/age";
+import { getSsnLast4, getSsnHash } from "@/lib/ssn-utils";
 
 const MIN_AGE = 18;
 const MAX_AGE = 130;
@@ -43,11 +44,27 @@ export const authRouter = router({
         });
       }
 
+      // Check for duplicate SSN
+      const ssnHash = getSsnHash(input.ssn);
+      const existingSsn = await db.select().from(users).where(eq(users.ssnHash, ssnHash)).get();
+
+      if (existingSsn) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "This SSN is already registered",
+        });
+      }
+
       const hashedPassword = await bcrypt.hash(input.password, 10);
+      const ssnLast4 = getSsnLast4(input.ssn);
+
+      const { ssn, ...inputWithoutSsn } = input;
 
       await db.insert(users).values({
-        ...input,
+        ...inputWithoutSsn,
         password: hashedPassword,
+        ssnLast4,
+        ssnHash,
       });
 
       // Fetch the created user

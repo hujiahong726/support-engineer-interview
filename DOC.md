@@ -25,7 +25,7 @@ Added/modified validation rules:
 Testing:
 Added Luhn Algorithm testing in lib/validation/card.test.ts
 Preventative Measures:
-Ensure that other input fields (phone numbers, ) also have correct validation checks.
+Ensure that other input fields (e.g. phone numbers) also have correct validation checks.
 
 Ticket VAL-208: Weak Password Requirements
 Cause:
@@ -38,6 +38,19 @@ Added validation checks:
 - must have special character
 Testing:
 Tested on frontend interface on valid and invalid inputs to ensure correct behavior.
+Preventative Measures:
+Ensure that other input fields also have adequate validation checks.
+
+Ticket SEC-301: SSN Storage
+Cause:
+SSN is stored in plaintext in database.
+Fix:
+- Store only the last four digits of ssn: ssnLast4
+- Store ssnHash (HMAC) for uniqueness checks
+Testing:
+Tested by signing up and investigating the users table in the sqlite database. Only ssnLast4 and ssnHash stored and not the actual ssn.
+Preventative Measures:
+Think about whether storing sensitive, private user information is necessary for our use case. Always keep user data privacy front of mind.
 
 
 
