@@ -2,21 +2,16 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { trpc } from "@/lib/trpc/client";
-import { isLuhnValid, normalizeCardNumber } from "@/lib/validation/card";
+import { fundingSchema, FundingFormData } from "@/lib/validation/schemas/funding.schema";
+import { isValid } from "zod";
 
 interface FundingModalProps {
   accountId: number;
   onClose: () => void;
   onSuccess: () => void;
 }
-
-type FundingFormData = {
-  amount: string;
-  fundingType: "card" | "bank";
-  accountNumber: string;
-  routingNumber?: string;
-};
 
 export function FundingModal({ accountId, onClose, onSuccess }: FundingModalProps) {
   const [error, setError] = useState("");
@@ -26,6 +21,8 @@ export function FundingModal({ accountId, onClose, onSuccess }: FundingModalProp
     watch,
     formState: { errors },
   } = useForm<FundingFormData>({
+    resolver: zodResolver(fundingSchema),
+    mode: "onChange",
     defaultValues: {
       fundingType: "card",
     },
@@ -69,21 +66,7 @@ export function FundingModal({ accountId, onClose, onSuccess }: FundingModalProp
                 <span className="text-gray-500 sm:text-sm">$</span>
               </div>
               <input
-                {...register("amount", {
-                  required: "Amount is required",
-                  pattern: {
-                    value: /^\d+\.?\d{0,2}$/,
-                    message: "Invalid amount format",
-                  },
-                  min: {
-                    value: 0.0,
-                    message: "Amount must be at least $0.01",
-                  },
-                  max: {
-                    value: 10000,
-                    message: "Amount cannot exceed $10,000",
-                  },
-                })}
+                {...register("amount")}
                 type="text"
                 className="pl-7 block w-full rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2 border"
                 placeholder="0.00"
@@ -111,18 +94,7 @@ export function FundingModal({ accountId, onClose, onSuccess }: FundingModalProp
               {fundingType === "card" ? "Card Number" : "Account Number"}
             </label>
             <input
-              {...register("accountNumber", {
-                required: `${fundingType === "card" ? "Card" : "Account"} number is required`,
-                validate: (value) => {
-                  if (fundingType !== "card") {
-                    return /^\d+$/.test(value) || "Invalid account number";
-                  }
-                  const digits = normalizeCardNumber(value);
-                  if (!/^\d{13,19}$/.test(digits)) return "Card number must be 13-19 digits";
-                  if (!isLuhnValid(digits)) return "Invalid card number";
-                  return true;
-                },
-              })}
+              {...register("accountNumber")}
               type="text"
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
               placeholder={fundingType === "card" ? "1234567812345678" : "123456789"}
@@ -161,7 +133,7 @@ export function FundingModal({ accountId, onClose, onSuccess }: FundingModalProp
             </button>
             <button
               type="submit"
-              disabled={fundAccountMutation.isPending}
+              disabled={fundAccountMutation.isPending || !isValid}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50"
             >
               {fundAccountMutation.isPending ? "Processing..." : "Fund Account"}
