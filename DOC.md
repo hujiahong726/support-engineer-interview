@@ -173,3 +173,17 @@ Preventative Measures:
 - Define and enforce constraints for resources that should not allow duplicate entries (e.g., active sessions per user)
 - Review database write operations to ensure corresponding cleanup or invalidation logic (where appropriate)
 - Encourage use of centralized session management utilities to maintain consistent behavior
+
+Ticket PERF-403: Session Expiry
+Cause:
+Session validation only checked whether expiresAt > now, meaning sessions remained fully valid right up until the exact expiration timestamp. There was no proactive actions taken for sessions close to expiry, which increased risk of sessions near expiration (e.g., stolen token remains usable until the last second) and could lead to inconsistent user experience when a request happens right at expiry.
+Fix:
+- Added a session refresh window and proactive rotation logic:
+- Introduced a threshold (THRESHOLD_MS = 15 minutes) to detect sessions nearing expiration.
+- When a valid session has less than the threshold remaining, generate a new session token and extend expiration (SESSION_DURATION_MS = 7 days).
+- Rotate the session in a database transaction and enforce “single active session per user” by deleting existing sessions before inserting the refreshed session.
+- Update the session cookie with secure attributes (HttpOnly, SameSite=Strict, Secure in production).
+Preventative Measures:
+- Define explicit centralized session lifecycle rules (rotation window, duration, single-session policy).
+- Add tests for edge cases around expiration.
+

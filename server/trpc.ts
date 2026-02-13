@@ -6,6 +6,9 @@ import { db } from "@/lib/db";
 import { sessions, users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
+const THRESHOLD_MS = 15 * 60 * 1000; // 15 minutes
+const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
 export async function createContext(opts: CreateNextContextOptions | FetchCreateContextFnOptions) {
   // Handle different adapter types
   let req: any;
@@ -46,6 +49,8 @@ export async function createContext(opts: CreateNextContextOptions | FetchCreate
   token = cookiesObj.session;
 
   let user = null;
+  let newTokenSet = false;
+
   if (token) {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET || "temporary-secret-for-interview") as {
@@ -54,11 +59,39 @@ export async function createContext(opts: CreateNextContextOptions | FetchCreate
 
       const session = await db.select().from(sessions).where(eq(sessions.token, token)).get();
 
-      if (session && new Date(session.expiresAt) > new Date()) {
-        user = await db.select().from(users).where(eq(users.id, decoded.userId)).get();
-        const expiresIn = new Date(session.expiresAt).getTime() - new Date().getTime();
-        if (expiresIn < 60000) {
-          console.warn("Session about to expire");
+      // Check session exists and is not expired
+      if (session) {
+        const expiresAt = new Date(session.expiresAt);
+        const now = new Date();
+
+        if (expiresAt > now) {
+          user = await db.select().from(users).where(eq(users.id, decoded.userId)).get();
+
+          const expiresIn = expiresAt.getTime() - now.getTime();
+          if (expiresIn < THRESHOLD_MS) {
+            const JWT_SECRET = process.env.JWT_SECRET || "temporary-secret-for-interview";
+            const newToken = jwt.sign({ userId: decoded.userId }, JWT_SECRET, { expiresIn: "7d" });
+            const newExpiresAt = new Date(Date.now() + SESSION_DURATION_MS).toISOString();
+
+            await db.transaction(async (tx) => {
+              // enforce strict single session per user:
+              await tx.delete(sessions).where(eq(sessions.userId, decoded.userId));
+
+              await tx.insert(sessions).values({
+                userId: decoded.userId,
+                token: newToken,
+                expiresAt: newExpiresAt,
+              });
+            });
+
+            const isProd = process.env.NODE_ENV === "production";
+            const cookie = `session=${newToken}; Path=/; HttpOnly; SameSite=Strict; Max-Age=604800${isProd ? "; Secure" : ""}`;
+
+            if ("setHeader" in res) res.setHeader("Set-Cookie", cookie);
+            else if (res && "set" in res) res.set("Set-Cookie", cookie);
+          }
+        } else {
+          await db.delete(sessions).where(eq(sessions.token, token));
         }
       }
     } catch (error) {
