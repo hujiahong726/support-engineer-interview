@@ -242,3 +242,13 @@ Preventative Measures:
 - Store normalized version in database for consistency
 - Consider using a library like `libphonenumber-js` for advanced international validation in future
 
+Ticket PERF-404: Transaction Sorting
+Cause:
+No transaction sorting when fetched from the database
+Fix:
+Added .orderBy(desc(transactions.createdAt)) so that transactions are listed by time descending (newest transactions first).
+Testing:
+Done with mock transactions on the UI.
+Preventative Measures:
+Have order requirement in sql queries for fields that are inherently ordered (e.g.fields that have timestamp) so that results fetched are easy to read.
+
