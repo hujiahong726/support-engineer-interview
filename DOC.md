@@ -143,4 +143,13 @@ Added validation check in the shared schema that forces user to enter routing nu
 Preventative Measures:
 - Ensured consistent validation rule in one place and that acts as a shared reference for both frontend and backend.
 
+Ticket VAL-210: Card Type Detection
+Also reference VAL-206: Card Number Validation
+Cause:
+The card number validation logic is too rigid. It rejects any number that is not 16 in length and doesn't start with 4 or 5. However this rejects a lot of good cards.
+Fix:
+We only ensure that card numbers are 13-19 in length and checks that they are valid numbers using Luhn Algorithm.
+Preventative Measures:
+- Have centralized validation rule for card numbers.
+- Use industry standard validation logic for financial info when possible.
 
