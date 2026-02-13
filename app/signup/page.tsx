@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { trpc } from "@/lib/trpc/client";
 import Link from "next/link";
+import { zodResolver } from "@hookform/resolvers/zod/src/index.js";
+import { signupSchema } from "@/lib/validation/schemas/auth.schema";
 
 type SignupFormData = {
   email: string;
@@ -32,7 +34,9 @@ export default function SignupPage() {
     formState: { errors },
     watch,
     trigger,
-  } = useForm<SignupFormData>();
+  } = useForm<SignupFormData>({
+    resolver: zodResolver(signupSchema),
+  });
   const signupMutation = trpc.auth.signup.useMutation();
 
   const password = watch("password");
@@ -80,13 +84,7 @@ export default function SignupPage() {
                   Email
                 </label>
                 <input
-                  {...register("email", {
-                    required: "Email is required",
-                    pattern: {
-                      value: /^\S+@\S+$/i,
-                      message: "Invalid email address",
-                    },
-                  })}
+                  {...register("email")}
                   type="email"
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
                 />
@@ -98,23 +96,7 @@ export default function SignupPage() {
                   Password
                 </label>
                 <input
-                  {...register("password", {
-                    required: "Password is required",
-                    minLength: {
-                      value: 8,
-                      message: "Password must be at least 8 characters",
-                    },
-                    validate: {
-                      hasUpper: (value) =>
-                        /[A-Z]/.test(value) || "Password must contain an uppercase letter",
-                      hasLower: (value) =>
-                        /[a-z]/.test(value) || "Password must contain a lowercase letter",
-                      hasNumber: (value) =>
-                        /\d/.test(value) || "Password must contain a number",
-                      hasSpecial: (value) => 
-                        /[^A-Za-z0-9]/.test(value) || "Password must contain a special character",
-                    },
-                  })}
+                  {...register("password")}
                   type="password"
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"
                 />
@@ -193,22 +175,7 @@ export default function SignupPage() {
                 </label>
                 <input
                   {...register("dateOfBirth", { 
-                    required: "Date of birth is required", 
-                    validate: (v) => {
-                      // v is "YYYY-MM-DD"
-                      const dob = new Date(v);
-                      if (Number.isNaN(dob.getTime())) return "Invalid date of birth";
-
-                      const today = new Date();
-                      const minDob = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
-                      const maxDob = new Date(today.getFullYear() - 130, today.getMonth(), today.getDate());
-
-                      if (dob > today) return "Date of birth cannot be in the future";
-                      if (dob > minDob) return "You must be at least 18 years old";
-                      if (dob < maxDob) return "Please enter a valid date of birth";
-
-                      return true;
-                    },
+                    required: "Date of birth is required",
                   })}
                   type="date"
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border"

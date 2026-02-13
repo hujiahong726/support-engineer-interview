@@ -6,34 +6,14 @@ import { publicProcedure, router } from "../trpc";
 import { db } from "@/lib/db";
 import { users, sessions } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { yearsAgo } from "@/lib/validation/age";
 import { getSsnLast4, getSsnHash } from "@/lib/ssn-utils";
+import { signupSchema } from '@/lib/validation/schemas/auth.schema';
 
-const MIN_AGE = 18;
-const MAX_AGE = 130;
+const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 export const authRouter = router({
   signup: publicProcedure
-    .input(
-      z.object({
-        email: z.string().email().toLowerCase(),
-        password: z.string().min(8),
-        firstName: z.string().min(1),
-        lastName: z.string().min(1),
-        phoneNumber: z.string().regex(/^\+?\d{10,15}$/),
-        dateOfBirth: z
-          .string()
-          .regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format")
-          .refine((v) => !Number.isNaN(Date.parse(v)), "Invalid date")
-          .refine((v) => new Date(v) <= yearsAgo(MIN_AGE), `You must be at least ${MIN_AGE} years old`)
-          .refine((v) => new Date(v) >= yearsAgo(MAX_AGE), `Age must be less than or equal to ${MAX_AGE}`),
-        ssn: z.string().regex(/^\d{9}$/),
-        address: z.string().min(1),
-        city: z.string().min(1),
-        state: z.string().length(2).toUpperCase(),
-        zipCode: z.string().regex(/^\d{5}$/),
-      })
-    )
+    .input(signupSchema)
     .mutation(async ({ input, ctx }) => {
       const existingUser = await db.select().from(users).where(eq(users.email, input.email)).get();
 
