@@ -163,3 +163,13 @@ Preventative Measures:
 - Establish guidelines requiring industry-standard libraries for ID generation
 - Perform periodic security reviews to identify and replace unsafe random number usage
 
+Ticket SEC-304: Session Management
+Cause:
+The system allowed multiple active sessions for the same user because existing sessions were not invalidated before creating new ones.
+Fix:
+Updated the workflow in auth.ts to delete any existing sessions for a user before creating a new session record. This ensures that only one active session exists per user.
+Preventative Measures:
+- Apply defensive programming practices to enforce session management
+- Define and enforce constraints for resources that should not allow duplicate entries (e.g., active sessions per user)
+- Review database write operations to ensure corresponding cleanup or invalidation logic (where appropriate)
+- Encourage use of centralized session management utilities to maintain consistent behavior

@@ -58,12 +58,13 @@ export const authRouter = router({
       }
 
       // Create session
+      // Invalidate all existing sessions for this user
+      await db.delete(sessions).where(eq(sessions.userId, user.id));
       const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET || "temporary-secret-for-interview", {
         expiresIn: "7d",
       });
 
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 7);
+      const expiresAt = new Date(Date.now() + SESSION_DURATION_MS);
 
       await db.insert(sessions).values({
         userId: user.id,
@@ -107,12 +108,14 @@ export const authRouter = router({
         });
       }
 
+      // Invalidate all existing sessions for this user
+      await db.delete(sessions).where(eq(sessions.userId, user.id));
+
       const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET || "temporary-secret-for-interview", {
         expiresIn: "7d",
       });
 
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 7);
+      const expiresAt = new Date(Date.now() + SESSION_DURATION_MS);
 
       await db.insert(sessions).values({
         userId: user.id,
