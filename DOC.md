@@ -125,3 +125,13 @@ Preventative Measures:
 - Apply consistent validation rules across frontend and backend
 - validating user inputs using shared schema
 
+Ticket VAL-205: Zero Amount Funding
+Cause:
+Validation rules for funding amount were previously implemented only in the backend. The frontend did not have this validation, which allowed invalid funding amounts (like 0) to be submitted and only rejected after reaching the server. Additionally, validation logic for funding inputs was duplicated across layers, increasing the risk of inconsistencies and reduced code maintenability.
+Fix:
+Refactored funding validation into a shared schema (funding.schema.ts) used by both frontend and backend. This ensures consistent validation across the application and provides a single source of truth for funding input requirements.
+Preventative Measures:
+- Established a shared validation pattern to reduce duplication between frontend and backend logic.
+- Ensured validation rules are defined and updated in one location.
+- Reduced risk of invalid data reaching database or financial processing workflows
+
