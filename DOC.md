@@ -80,3 +80,12 @@ Preventative Measures:
 - Avoid returning default data (especially for financial operations) when database operations fail.
 - Ensure we report database failures and have proper error handling in place
 
+Ticket PERF-405: Missing Transactions
+Cause:
+Race condition could happen when multiple users fund their accounts at the same time. The transaction we fetched may not be the one that we created (since we didn't check for the account id).
+Fix:
+Directly return the transaction we created instead of creating and fetching. This way we ensure atomicity and prevent race conditions.
+Preventative Measures:
+- Avoid read-after-write operations that rely on orderBy to identify the newly created record
+- Always find transaction queries by accountId
+

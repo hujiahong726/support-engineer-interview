@@ -107,7 +107,7 @@ export const accountRouter = router({
       }
 
       // Create transaction
-      await db.insert(transactions).values({
+      const created = await db.insert(transactions).values({
         accountId: input.accountId,
         type: "deposit",
         amount,
@@ -115,10 +115,12 @@ export const accountRouter = router({
         status: "completed",
         processedAt: new Date().toISOString(),
       });
-
-      // Fetch the created transaction
-      const transaction = await db.select().from(transactions).orderBy(transactions.createdAt).limit(1).get();
-
+      if (!created) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create transaction",
+        });
+      }
       // Update account balance
       await db
         .update(accounts)
@@ -133,7 +135,7 @@ export const accountRouter = router({
       }
 
       return {
-        transaction,
+        transaction: created,
         newBalance: finalBalance, // This will be slightly off due to float precision
       };
     }),
