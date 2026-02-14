@@ -22,11 +22,12 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
       links: [
         httpBatchLink({
           url: "/api/trpc",
-          fetch(url, options) {
-            return fetch(url, {
+          fetch: async (url, options) => {
+            const response = await fetch(url, {
               ...options,
               credentials: "same-origin",
-            });
+            } as RequestInit);
+            return response;
           },
         }),
       ],
