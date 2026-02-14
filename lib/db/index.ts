@@ -62,5 +62,30 @@ export function initDb() {
   `);
 }
 
+/**
+ * Gracefully close database connection
+ * Exported for use in process shutdown handlers (SIGINT, SIGTERM)
+ */
+export function closeDb() {
+  try {
+    sqlite.close();
+  } catch (error) {
+    console.error("Error closing database:", error);
+  }
+}
+
 // Initialize database on import
 initDb();
+
+// Graceful shutdown: close DB connection on process termination
+if (typeof process !== "undefined") {
+  process.on("SIGINT", () => {
+    closeDb();
+    process.exit(0);
+  });
+
+  process.on("SIGTERM", () => {
+    closeDb();
+    process.exit(0);
+  });
+}
