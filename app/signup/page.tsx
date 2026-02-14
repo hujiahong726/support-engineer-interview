@@ -67,8 +67,9 @@ export default function SignupPage() {
       setError("");
       await signupMutation.mutateAsync(data);
       router.push("/dashboard");
-    } catch (err: any) {
-      setError(err.message || "Something went wrong");
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      setError(error.message || "Something went wrong");
     }
   };
 
