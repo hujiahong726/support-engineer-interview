@@ -11,7 +11,6 @@ const id = nanoid();
 
 // Custom Numeric-only Account Number (e.g., "4920583712")
 const generateAccountNumber = customAlphabet('0123456789', 10);
-const accountNumber = generateAccountNumber();
 
 export const accountRouter = router({
   createAccount: protectedProcedure
